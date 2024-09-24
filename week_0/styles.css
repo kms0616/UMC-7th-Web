@@ -1,0 +1,30 @@
+.navbar-container {
+    display : flex;
+    justify-content: space-between; /*로고랑 메뉴 사이 거리 최대로 설정*/
+    align-items: center; /*높낮이 center로 맞춤*/
+    background-color: white; /*navbar 배경색을 하얀색으로 설정함*/
+}
+
+.logo img {
+    width : 170px;
+    height : auto; /*가로 길이에 맞게 원본 비율 유지하도록 auto설정*/
+}
+
+.navbar ul {
+    list-style-type: none; /*ul태그 사용시 각 항목에 생기는 list style 없앰*/
+    margin: 0;
+    padding: 0;
+    display : flex; /*ul을 수평 배열 사용*/
+}
+
+.navbar ul li {
+    margin-left: 20px;
+}
+
+.navbar ul li a {
+    color: black;
+    text-decoration: none;
+    display : block;
+    font-size: 16px;
+    padding: 10px 15px;
+}
