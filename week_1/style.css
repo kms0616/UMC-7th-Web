@@ -1,0 +1,64 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #d9e6ed; 
+    text-align: center; /* 글씨 가운데 정렬 */
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    background: #d9e6ed;
+    padding: 20px; /* 패딩 조정 */
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.todo-section {
+    display: flex; /* 수평 정렬 */
+    justify-content: space-between; /* 양 끝에 정렬 */
+    margin-top: 20px;
+}
+
+.todo-list, .done-list {
+    width: 50%; /* 섹션 폭 조정 */
+}
+
+h1, h2 {
+    margin: 0 0 10px;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+li button {
+    background: #d3d3d3; /* 회색 */
+    color: black; /* 글자색 검정 */
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+li.done {
+    background-color: #d9e6ed; /* 해낸 일 */
+    text-decoration: none; /* 줄이 안쳐짐 */
+}
