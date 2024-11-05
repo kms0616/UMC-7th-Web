@@ -1,73 +1,52 @@
-import React, {useState} from 'react';
+import React from 'react';
 import styled from 'styled-components';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+
+// yup 스키마 정의
+const schema = yup.object().shape({
+    email: yup.string().email('올바른 이메일 형식이 아닙니다. 다시 확인해주세요!').required('이메일을 입력해주세요.'),
+    password: yup.string()
+        .min(8, '비밀번호는 8자 이상이어야 합니다.')
+        .max(16, '비밀번호는 16자 이하여야 합니다.')
+        .required('비밀번호를 입력해주세요.'),
+});
 
 const LoginPage = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [emailError, setEmailError] = useState('');
-    const [passwordError, setPasswordError] = useState('');
-    const [isTouched, setIsTouched] = useState({ email: false, password: false });
-    
-    const validateEmail = (value) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-            setEmailError("올바른 이메일 형식이 아닙니다. 다시 확인해주세요!")
-        }
-        else {
-            setEmailError('');
-        }
-    };
-    
-    const validatePassword = (value) => {
-        if (value.length < 8 || value.length > 16) {
-            setPasswordError("비밀번호는 8 ~ 16자리 사이로 입력해주세요!");
-        }
-        else {
-            setPasswordError('');
-        }
+    // useForm 훅 사용
+    const { register, handleSubmit, formState: { errors, isValid } } = useForm({
+        resolver: yupResolver(schema), // yup 스키마를 리졸버로 설정
+        mode: "onChange", // 입력값이 변경될 때마다 유효성 검사
+    });
+
+    const onSubmit = (data) => {
+        console.log('로그인 데이터 제출', data);
     };
 
-    const handleEmailChange = (e) => {
-        setEmail(e.target.value);
-        validateEmail(e.target.value);
-    };
-
-    const handlePasswordChange = (e) => {
-        setPassword(e.target.value);
-        validatePassword(e.target.value);
-    };
-
-    const handleBlur = (field) => {
-        setIsTouched({ ...isTouched, [field]: true });
-    };
-    const isFormValid = email && password && !emailError && !passwordError;
     return (
         <Container>
             <Title>로그인</Title>
-            <Form>
+            <Form onSubmit={handleSubmit(onSubmit)}>
                 <Label>이메일</Label>
                 <Input
                     type="email"
-                    value={email}
-                    onChange={handleEmailChange}
+                    {...register("email")}
                     placeholder="이메일을 입력해주세요!"
-                    onBlur={() => handleBlur('email')}
-                    isError={isTouched.email && emailError}
+                    isError={!!errors.email} // 에러가 있을 때 true
                 />
-                {isTouched.email && emailError && <Error>{emailError}</Error>}
+                {errors.email && <Error>{errors.email.message}</Error>}
 
                 <Label>비밀번호</Label>
                 <Input
                     type="password"
-                    value={password}
-                    onChange={handlePasswordChange}
+                    {...register("password")}
                     placeholder="비밀번호를 입력해주세요!"
-                    onBlur={() => handleBlur('password')}
-                    isError={isTouched.password && passwordError}
+                    isError={!!errors.password} // 에러가 있을 때 true
                 />
-                {isTouched.password && passwordError && <Error>{passwordError}</Error>}
+                {errors.password && <Error>{errors.password.message}</Error>}
 
-                <LoginButton disabled={!isFormValid}>로그인</LoginButton>
+                <LoginButton type="submit" disabled={!isValid}>로그인</LoginButton>
             </Form>
         </Container>
     );
@@ -89,7 +68,7 @@ const Title = styled.h2`
     margin-bottom: 20px;
 `;
 
-const Form = styled.div`
+const Form = styled.form`
     display: flex;
     flex-direction: column;
     width: 300px;
@@ -122,10 +101,15 @@ const Error = styled.div`
 const LoginButton = styled.button`
     padding: 10px;
     font-size: 16px;
-    background-color: ${(props) => (props.disabled ? '#ccc' : '#ff0558')};
+    background-color: #ff0558;
     color: white;
     border: none;
     border-radius: 4px;
     margin-top: 10px;
-    cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
+    cursor: pointer;
+
+    &:disabled {
+        background-color: #ccc; // 비활성화 시 색상
+        cursor: not-allowed;
+    }
 `;
