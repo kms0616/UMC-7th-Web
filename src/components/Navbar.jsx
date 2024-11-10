@@ -1,7 +1,8 @@
-import React from 'react';
-import {useNavigate} from 'react-router-dom';
+import React, { useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Button from './Button';
+import { AuthContext } from '../context/AuthContext';
 
 const Logo = styled.div`
   font-size: 30px;
@@ -21,17 +22,42 @@ const NavbarContainer = styled.nav`
 `;
 
 const Navbar = () => {
-    const navigate = useNavigate();
+  const { user, fetchUser, handleLogout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-    return (
-        <NavbarContainer>
-            <Logo onClick={() => navigate('/')}>MINCHA</Logo>
-            <div>
-                <Button color="#000" onClick={() => navigate('/login')}>로그인</Button>
-                <Button color="#ff0558" onClick={() => navigate('/signup')}>회원가입</Button>
-            </div>
-        </NavbarContainer>
-    );
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken && !user) {
+      fetchUser(); // 사용자 정보가 없고 로그인 상태일 때만 fetchUser 호출
+    }
+  }, [user, fetchUser]);
+
+  return (
+    <NavbarContainer>
+      <Logo onClick={() => navigate('/')}>MINCHA</Logo>
+      <div>
+        {user ? (
+          <>
+            <span style={{ color: 'white', marginRight: '20px' }}>
+              {user.email.split('@')[0]}님 반갑습니다.
+            </span>
+            <Button color="#ff0558" onClick={handleLogout}>
+              로그아웃
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button color="#000" onClick={() => navigate('/login')}>
+              로그인
+            </Button>
+            <Button color="#ff0558" onClick={() => navigate('/signup')}>
+              회원가입
+            </Button>
+          </>
+        )}
+      </div>
+    </NavbarContainer>
+  );
 };
 
 export default Navbar;
