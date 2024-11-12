@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 import * as S from "../style/search_style";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useCustomFetch from '../hooks/useCustomFetch';
@@ -17,16 +18,19 @@ const SearchPage = () => {
     });
     const mq = searchParams.get('mq');
 
-    const handleSearchMovie = () => {
-        if (!searchValue) return;  // 검색어가 비어있으면 실행하지 않음
-        if (mq === searchValue) return;  // 이미 같은 검색어라면 리렌더링을 막기 위해 return
-        setSearching(true);  // 검색 시작
-        navigate(`/search?mq=${searchValue}`);  // URL 업데이트
-    };
+    const handleSearchMovie = useCallback(
+        debounce(() => {
+            if (!searchValue) return;
+            if (mq === searchValue) return;
+            setSearching(true); // 검색 시작
+            navigate(`/search?mq=${searchValue}`); // URL 업데이트
+        }, 500), // 500ms의 딜레이 후 검색
+        [searchValue, mq, navigate] // 의존성 배열
+    );
 
     const handleSearchMovieWithKeyboard = (e) => {
         if (e.key === 'Enter') {
-            handleSearchMovie();  // 엔터키 입력 시 검색 실행
+            handleSearchMovie();
         }
     };
 
