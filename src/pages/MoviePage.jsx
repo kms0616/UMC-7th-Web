@@ -47,6 +47,7 @@ const Title = styled.h2`
 const Categories = styled.div`
     display: flex;
     gap: 20px;
+    flex-wrap: wrap;
 `;
 
 const CategoryBox = styled.div`
