@@ -32,7 +32,6 @@ const LoginPage = () => {
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
             const userData = { email: data.email };
-            localStorage.setItem('user', JSON.stringify(userData));
 
             handleLogin(userData); // 로그인 후 AuthContext에 로그인 상태 저장
             navigate('/'); // 로그인 후 홈 페이지로 이동
