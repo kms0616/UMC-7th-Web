@@ -5,6 +5,23 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import useCustomFetch from '../hooks/useCustomFetch';
 import MovieCard from '../components/MovieCard';  // MovieCard 임포트
 
+const Skeleton = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '20px', marginTop: '20px' }}>
+        {[...Array(20)].map((_, idx) => (
+            <div
+                key={idx}
+                style={{
+                    height: '250px',
+                    backgroundColor: '#888',
+                    borderRadius: '10px',
+                    animation: 'pulse 1.5s infinite ease-in-out',
+                }}
+            />
+        ))}
+    </div>
+);
+
+
 const SearchPage = () => {
     const [searchValue, setSearchValue] = useState('');
     const [searching, setSearching] = useState(false);  // 검색 상태를 추적하는 상태 추가
@@ -37,15 +54,7 @@ const SearchPage = () => {
     const url = `/search/movie?query=${searchValue}&include_adult=false&language=ko-KR&page=1`;
     const { data: movies, isLoading, isError } = useCustomFetch(url);
 
-    const Skeleton = () => (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '20px', marginTop: '20px' }}>
-            {[...Array(20)].map((_, idx) => (
-                <div key={idx} style={{
-                    height: '250px', backgroundColor: '#888', borderRadius: '10px', animation: 'pulse 1.5s infinite ease-in-out'
-                }} />
-            ))}
-        </div>
-    );
+
     // 로딩, 오류, 검색 결과가 없을 때 처리
     const renderContent = () => {
         if (isLoading && searching) return <Skeleton/>;
