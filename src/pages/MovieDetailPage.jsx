@@ -1,30 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query'; // useQuery 훅을 import
 import axiosInstance from '../apis/axios-instance';
 import styled from 'styled-components';
 
+const fetchMovieData = async (movieId) => {
+    const response = await axiosInstance.get(`/movie/${movieId}`);
+    return response.data;
+};
+
+const fetchCreditsData = async (movieId) => {
+    const response = await axiosInstance.get(`/movie/${movieId}/credits`);
+    return response.data;
+};
+
 const MovieDetailPage = () => {
     const { movieId } = useParams();
-    const [movie, setMovie] = useState(null);
-    const [credits, setCredits] = useState(null);
 
-    useEffect(() => {
-        const fetchMovieData = async () => {
-            try {
-                const movieResponse = await axiosInstance.get(`/movie/${movieId}`);
-                setMovie(movieResponse.data);
+    // 영화 데이터 가져오기
+    const { data: movie, isLoading: isMovieLoading, error: movieError } = useQuery({
+        queryKey: ['movie', movieId], // queryKey를 객체로 지정
+        queryFn: () => fetchMovieData(movieId), // 데이터 fetching 함수
+    });
 
-                const creditsResponse = await axiosInstance.get(`/movie/${movieId}/credits`);
-                setCredits(creditsResponse.data);
-            } catch (error) {
-                console.error("Error fetching movie details:", error);
-            }
-        };
+    // 감독/출연 정보 가져오기
+    const { data: credits, isLoading: isCreditsLoading, error: creditsError } = useQuery({
+        queryKey: ['credits', movieId], // queryKey를 객체로 지정
+        queryFn: () => fetchCreditsData(movieId), // 데이터 fetching 함수
+    });
 
-        fetchMovieData();
-    }, [movieId]);
+    // 로딩 중일 때
+    if (isMovieLoading || isCreditsLoading) return <div>Loading...</div>;
 
-    if (!movie || !credits) return <div>Loading...</div>;
+    // 에러 처리
+    if (movieError || creditsError) return <div>Error loading data</div>;
 
     return (
         <DetailContainer>
@@ -71,7 +80,7 @@ const Content = styled.div`
     width: 100%;
     margin-bottom: 20px;
     overflow: hidden;
-    background-image: url(${(props) => `https://image.tmdb.org/t/p/w500${props.backdrop}`});
+    background-image: ${({ backdrop }) => `url(https://image.tmdb.org/t/p/w500${backdrop})`}; /* backdrop을 이용한 스타일 설정 */
     background-size: cover;
     background-position: center;
 
