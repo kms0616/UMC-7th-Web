@@ -2,7 +2,7 @@ import React from 'react';
 import MovieCard from '../components/MovieCard';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import useInfiniteMovies from '../hooks/useInfiniteMovies';
+import usePaginatedMovies from '../hooks/usePaginatedMovies'; // usePaginatedMovies로 변경
 import Spinner from '../components/Spinner';
 
 const Skeleton = () => (
@@ -27,10 +27,10 @@ const NowPlayingPage = () => {
         data,
         isLoading,
         isError,
-        hasNextPage,
-        isFetchingNextPage,
-        observerRef,
-    } = useInfiniteMovies('/movie/now_playing'); // API 엔드포인트 수정
+        page,
+        goToNextPage,
+        goToPrevPage,
+    } = usePaginatedMovies('/movie/now_playing'); // API 엔드포인트 수정
 
     if (isLoading) {
         return (
@@ -53,8 +53,8 @@ const NowPlayingPage = () => {
 
     return (
         <HomeContainer>
-            {data?.pages.map((page) =>
-                page.results.map(movie => (
+            {data && data.results ? (
+                data.results.map((movie) => (
                     <MovieCard
                         key={movie.id}
                         title={movie.title}
@@ -63,22 +63,19 @@ const NowPlayingPage = () => {
                         onClick={() => handleCardClick(movie.id)}
                     />
                 ))
+            ) : (
+                <div>Loading...</div> // 데이터가 없을 때 표시할 로딩 화면
             )}
 
-            {isFetchingNextPage && (
-                <>
-                    <Skeleton />
-                    <LoadingSpinnerContainer>
-                        <Spinner />
-                    </LoadingSpinnerContainer>
-                </>
-            )}
-
-            <div ref={observerRef} />
-
-            {hasNextPage === false && !isFetchingNextPage && (
-                <p style={{ color: 'white', textAlign: 'center' }}>더 이상 영화가 없습니다.</p>
-            )}
+            <PaginationContainer>
+                <PaginationButton onClick={goToPrevPage} disabled={page === 1}>
+                    이전
+                </PaginationButton>
+                <PageNumber>{page}</PageNumber>
+                <PaginationButton onClick={goToNextPage} disabled={!data || page === data.total_pages}>
+                    다음
+                </PaginationButton>
+            </PaginationContainer>
         </HomeContainer>
     );
 };
@@ -92,6 +89,43 @@ const HomeContainer = styled.div`
     padding: 5px;
     background-color: #000;
     gap: 10px;
+    position: relative;
+    padding-bottom: 100px;
+`;
+
+const PaginationContainer = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    position: absolute; /* 화면 하단에 고정 */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+`;
+
+const PaginationButton = styled.button`
+    background-color: ${({ disabled }) => (disabled ? '#ccc' : '#ff0558')};
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 10px;
+    cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+        background-color: ${({ disabled }) => (disabled ? '#ccc' : '#e0044e')};
+    }
+`;
+
+const PageNumber = styled.span`
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 10px;
 `;
 
 const LoadingSpinnerContainer = styled.div`
