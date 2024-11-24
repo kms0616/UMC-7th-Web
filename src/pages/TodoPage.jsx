@@ -6,6 +6,7 @@ import Button from '../components/Button';
 import useFetch from '../hooks/useFetch';
 import LoadingMessage from '../components/LoadingMessage';  // 로딩 메시지 컴포넌트
 import ErrorMessage from '../components/ErrorMessage';    // 에러 메시지 컴포넌트
+import { useMutation } from '@tanstack/react-query';
 
 function TodoPage() {
   const { id } = useParams();
@@ -25,43 +26,54 @@ function TodoPage() {
   }, [todo]);
 
   // Todo 수정
-  const handleUpdateTodo = async () => {
-    try {
+  const updateTodoMutation = useMutation({
+    mutationFn: async () => {
       const response = await fetch(`http://localhost:3000/todo/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: updatedTitle, content: updatedContent, checked }),
       });
-  
-      const updatedTodo = await response.json();
-      navigate(`/todos/${updatedTodo.id}`);
-      
+
       if (!response.ok) throw new Error('수정 실패');
-    } catch (err) {
-      // 에러 발생 시, 새로고침을 시도하고 이후에도 에러가 있으면 에러 메시지 표시
-      window.location.reload();
-      
-      // 에러가 계속 발생하면 메시지 표시
+      return response.json();
+    },
+    onSuccess: (updatedTodo) => {
+      navigate(`/todos/${updatedTodo.id}`);
+    },
+    onError: (err) => {
       alert(err.message || '수정에 실패했습니다.');
-    }
-  };
-  
-  
-  
-  
+    },
+  });
+
   // Todo 삭제
-  const handleDeleteTodo = async () => {
-    try {
+  const deleteTodoMutation = useMutation({
+    mutationFn: async () => {
       const response = await fetch(`http://localhost:3000/todo/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('삭제에 실패했습니다.');
+    },
+    onSuccess: () => {
       navigate('/');  // 삭제 후 홈으로 리다이렉트
-    } catch (err) {
+    },
+    onError: (err) => {
       alert(err.message || '삭제에 실패했습니다.');
+    },
+  });
+
+  const handleUpdateTodo = () => {
+    if (!updatedTitle.trim() || !updatedContent.trim()) {
+      alert('제목과 내용을 입력하세요!');
+      return;
     }
+    updateTodoMutation.mutate();
+    window.location.reload(); // useMutation으로 수정 요청 보내기
+  };
+
+  const handleDeleteTodo = () => {
+    deleteTodoMutation.mutate(); // useMutation으로 삭제 요청 보내기
   };
 
   if (loading) return <LoadingMessage />;
-  if (error || !todo) return <ErrorMessage />;
+  if (error || !todo) return <ErrorMessage message={error?.message || 'Todo 데이터를 불러오는 데 실패했습니다.'} />;
 
   return (
     <DetailWrapper>
@@ -89,7 +101,7 @@ function TodoPage() {
                 />
                 <label>완료 여부</label>
               </CheckboxWrapper>
-              <Button onClick={handleUpdateTodo} label="수정 완료" />
+              <Button onClick={handleUpdateTodo} label="수정 완료" disabled={updateTodoMutation.isLoading} />
             </>
           ) : (
             <>
@@ -100,7 +112,7 @@ function TodoPage() {
               </TodoInfo>
               <ButtonWrapper>
                 <Button onClick={() => setIsEditing(true)} label="수정" />
-                <Button onClick={handleDeleteTodo} label="삭제" />
+                <Button onClick={handleDeleteTodo} label="삭제" disabled={deleteTodoMutation.isLoading} />
               </ButtonWrapper>
             </>
           )}

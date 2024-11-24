@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { TodoContext } from '../context/TodoContext'; 
 import styled from 'styled-components';
 import Header from '../components/Header';
@@ -7,39 +7,100 @@ import Button from '../components/Button';
 import LoadingMessage from '../components/LoadingMessage';
 import ErrorMessage from '../components/ErrorMessage';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// 데이터 가져오기 (useQuery)
+const fetchTodos = async () => {
+  const response = await fetch('http://localhost:3000/todo');
+  if (!response.ok) throw new Error('Todos 데이터를 가져오는 데 실패했습니다.');
+  const [data] = await response.json();
+  return data || [];
+};
+
+// Todo 추가 (useMutation)
+const addTodo = async (todo) => {
+  const response = await fetch('http://localhost:3000/todo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(todo),
+  });
+  if (!response.ok) throw new Error('Todo 추가 실패');
+  return response.json();
+};
+
+// Todo 삭제 (useMutation)
+const deleteTodo = async (id) => {
+  const response = await fetch(`http://localhost:3000/todo/${id}`, { method: 'DELETE' });
+  if (!response.ok) throw new Error('Todo 삭제 실패');
+  return id;
+};
+
+// Todo 수정 (useMutation)
+const updateTodo = async ({ id, title, content, checked }) => {
+  const response = await fetch(`http://localhost:3000/todo/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, content, checked }), // checked 추가
+  });
+  if (!response.ok) throw new Error('Todo 수정 실패');
+  return response.json();
+};
 
 function Home() {
-  const { todos, setTodos, text, setText, taskText, setTaskText } = useContext(TodoContext);
+  const { text, setText, taskText, setTaskText } = useContext(TodoContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editingTodo, setEditingTodo] = useState(null); // 수정 중인 Todo 상태
+  const [editingTodo, setEditingTodo] = useState(null); 
   const isFormValid = text.trim() !== "" && taskText.trim() !== "";
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // 초기 데이터 가져오기
-  useEffect(() => {
-    const fetchTodos = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('http://localhost:3000/todo');
-        if (!response.ok) throw new Error('Todos 데이터를 가져오는 데 실패했습니다.');
-        const [data] = await response.json(); // 첫 번째 배열 추출
-        setTodos(data || []); // 배열이 없을 경우 빈 배열로 설정
-      } catch (err) {
-        setError(err.message || 'Todos 데이터를 가져오는 데 실패했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    };    
+  // useQuery로 Todo 목록 가져오기
+  const { data: todos, isLoading, error: queryError } = useQuery({
+    queryKey: ['todos'],
+    queryFn: fetchTodos
+  });
 
-    fetchTodos();
-  }, [setTodos]);
+  // useMutation 훅들
+  const { mutate: handleAddTodo } = useMutation({
+    mutationFn: addTodo,
+    onSuccess: (newTodo) => {
+      queryClient.invalidateQueries(['todos']);
+      setText('');
+      setTaskText('');
+    },
+    onError: (err) => setError(err.message),
+  });
 
-  
+  const { mutate: handleDeleteTodo } = useMutation({
+    mutationFn: deleteTodo,
+    onSuccess: (id) => {
+      queryClient.invalidateQueries(['todos']);
+    },
+    onError: (err) => setError(err.message),
+  });
 
-  // Todo 추가
-  const handleAddTodo = async (e) => {
+  const { mutate: handleUpdateTodo } = useMutation({
+    mutationFn: updateTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['todos']);
+      setEditingTodo(null);
+    },
+    onError: (err) => setError(err.message),
+  });
+
+  if (isLoading) return <LoadingMessage />;
+  if (queryError) {
+    return (
+      <ErrorMessage 
+        error={queryError.message} 
+        onRetry={() => queryClient.invalidateQueries(['todos'])} 
+      />
+    );
+  }
+
+  const handleAddTodoSubmit = (e) => {
     e.preventDefault();
     const trimmedTitle = text.trim();
     const trimmedContent = taskText.trim();
@@ -49,148 +110,38 @@ function Home() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    handleAddTodo({ title: trimmedTitle, content: trimmedContent });
+  };
 
-    try {
-      const response = await fetch('http://localhost:3000/todo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: trimmedTitle, content: trimmedContent }),
-      });
-
-      if (!response.ok) throw new Error('Todo 추가 실패');
-      const newTodo = await response.json();
-      setTodos((prevTodos) => [...prevTodos, newTodo]);
-      setText('');
-      setTaskText('');
-    } catch (err) {
-      setError(err.message || 'Todo 생성에 실패했습니다.');
-    } finally {
-      setLoading(false);
+  const handleTodoUpdate = (id, updatedTitle, updatedContent) => {
+    if (updatedTitle.trim() && updatedContent.trim()) {
+      handleUpdateTodo({ id, title: updatedTitle, content: updatedContent });
+      window.location.reload();
+    } else {
+      alert('제목과 내용을 입력해주세요.');
     }
   };
 
-  // Todo 삭제
-  const handleDeleteTodo = async (id) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`http://localhost:3000/todo/${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Todo 삭제 실패');
-      setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
-    } catch (err) {
-      setError(err.message || 'Todo 삭제에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
+  const handleCheckboxChange = (todo) => {
+    handleUpdateTodo({
+      id: todo.id,
+      title: todo.title,
+      content: todo.content,
+      checked: !todo.checked,
+    });
+    window.location.reload(); // 새로고침 추가
   };
-
-  // Todo 체크 상태 변경
-  const handleCheckTodo = async (id, checked) => {
-    // 기존 상태 저장
-    const prevTodos = [...todos];
-  
-    // Optimistic UI 업데이트
-    setTodos((prevTodos) =>
-      prevTodos.map((todo) => (todo.id === id ? { ...todo, checked } : todo))
-    );
-  
-    setLoading(true);
-    setError(null);  // 에러 상태 초기화
-  
-    try {
-      const response = await fetch(`http://localhost:3000/todo/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checked }),
-      });
-  
-      if (!response.ok) throw new Error('체크 상태 변경 실패');
-  
-      const updatedTodo = await response.json();
-  
-      setTodos((prevTodos) =>
-        prevTodos.map((todo) =>
-          todo.id === updatedTodo.id ? { ...todo, ...updatedTodo } : todo
-        )
-      );
-    } catch (err) {
-      // 실패 시 에러 상태 설정
-      setError(err.message || '체크 상태 변경에 실패했습니다.');
-      setTodos(prevTodos);  // 실패 시 원래 상태로 롤백
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  
-  // Todo 수정완료
-  const handleUpdateTodo = async (id, updatedTitle, updatedContent) => {
-    const prevTodos = [...todos];
-  
-    // Optimistic UI 업데이트
-    setTodos(prevTodos.map((todo) => 
-      todo.id === id ? { ...todo, title: updatedTitle, content: updatedContent } : todo
-    ));
-    
-    setLoading(true);
-    setError(null);
-  
-    try {
-      const response = await fetch(`http://localhost:3000/todo/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: updatedTitle, content: updatedContent }),
-      });
-  
-      if (!response.ok) throw new Error('수정 실패');
-  
-      const updatedTodo = await response.json();
-  
-      // 성공한 데이터를 상태로 반영
-      setTodos((prevTodos) => 
-        prevTodos.map((todo) => (todo.id === id ? updatedTodo : todo))
-      );
-    } catch (err) {
-      // 실패 시 이전 상태로 롤백
-      setTodos(prevTodos);
-      setError(err.message || '수정에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  
-  if (loading) return <LoadingMessage />;
-
-  if (error && !loading) {
-  // 새로고침을 에러 상태가 있을 때만 시도
-    window.location.reload();  // 페이지 새로고침
-
-    return (
-      <ErrorMessage 
-        error={error} 
-        onRetry={() => {
-          setError(null);  // 에러 상태 초기화
-          window.location.reload();  // 새로고침
-        }} 
-      />
-    );
-  }
-
 
   return (
     <AppWrapper>
       <ContentWrapper>
         <Header />
-        {/* Todo 생성 폼 */}
-        <form onSubmit={handleAddTodo}>
+        <form onSubmit={handleAddTodoSubmit}>
           <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="제목을 입력하세요" />
           <Input value={taskText} onChange={(e) => setTaskText(e.target.value)} placeholder="내용을 입력하세요" />
           <Button label="ToDo 생성" fullWidth disabled={!isFormValid} />
         </form>
 
-        {/* Todo 리스트 */}
         <TodoList>
           {todos?.length > 0 ? (
             todos.map((todo) => (
@@ -198,11 +149,9 @@ function Home() {
                 <TodoCheckbox
                   type="checkbox"
                   checked={todo.checked}
-                  onChange={() => handleCheckTodo(todo.id, !todo.checked)}
+                  onChange={() => handleCheckboxChange(todo)}
                 />
-                <TodoId onClick={() => navigate(`/todos/${todo.id}`)}>
-                  ID: {todo.id}
-                </TodoId> {/* ID 표시 */}
+                <TodoId onClick={() => navigate(`/todos/${todo.id}`)}>ID: {todo.id}</TodoId>
                 <TodoContent>
                   {editingTodo && editingTodo.id === todo.id ? (
                     <>
@@ -226,14 +175,7 @@ function Home() {
                   {editingTodo && editingTodo.id === todo.id ? (
                     <Button
                       label="수정 완료"
-                      onClick={() => {
-                        if (editingTodo.title.trim() && editingTodo.content.trim()) {
-                          handleUpdateTodo(todo.id, editingTodo.title, editingTodo.content);
-                          setEditingTodo(null); // 수정 완료 후 상태 초기화
-                        } else {
-                          alert('제목과 내용을 입력해주세요.');
-                        }
-                      }}
+                      onClick={() => handleTodoUpdate(todo.id, editingTodo.title, editingTodo.content)}
                     />
                   ) : (
                     <>
@@ -274,7 +216,7 @@ const TodoList = styled.div`
 const TodoItem = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* 아이템 왼쪽 정렬 */
+  justify-content: flex-start;
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 10px;
@@ -284,7 +226,7 @@ const TodoItem = styled.div`
 
 const TodoContent = styled.div`
   flex: 1;
-  text-align: left; /* 텍스트 왼쪽 정렬 */
+  text-align: left;
 `;
 
 const TodoText = styled.p`
@@ -292,15 +234,14 @@ const TodoText = styled.p`
 `;
 
 const TodoId = styled.div`
-  margin: 0 10px; /* ID와 체크박스 및 목록 사이의 간격 조정 */
+  margin: 0 10px;
   font-size: 0.9rem;
   color: gray;
   cursor: pointer;
   &:hover {
-    text-decoration : underline;
+    text-decoration: underline;
   }
 `;
-
 
 const TodoCheckbox = styled.input`
   margin-right: 10px;
