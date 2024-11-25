@@ -1,14 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext'; // AuthContext 가져오기
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
 
 const schema = yup.object().shape({
-    email: yup.string().email('올바른 이메일 형식이 아닙니다. 다시 확인해주세요!').required('이메일을 입력해주세요.'),
+    email: yup.string().email('올바른 이메일 형식이 아닙니다.').required('이메일을 입력해주세요.'),
     password: yup.string()
         .min(8, '비밀번호는 8자 이상이어야 합니다.')
         .max(16, '비밀번호는 16자 이하여야 합니다.')
@@ -19,36 +19,36 @@ const schema = yup.object().shape({
 });
 
 const SignupPage = () => {
-    const { handleLogin } = useContext(AuthContext); // AuthContext에서 handleLogin 가져오기
+    const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors, isValid } } = useForm({
         resolver: yupResolver(schema),
-        mode: "onChange",
+        mode: 'onChange',
     });
-    const navigate = useNavigate();
 
-    const onSubmit = async (data) => {
-        try {
-            const response = await axios.post('http://localhost:3000/auth/register', data, {
-                headers: { 'Content-Type': 'application/json' },
-            });
+    const signupMutation = useMutation({
+        mutationFn: (data) => axios.post('http://localhost:3000/auth/register', data),
+        onSuccess: () => {
+            navigate('/login');
+        },
+        onError: (error) => {
+            console.error('회원가입 실패:', error);
+            alert('회원가입에 실패했습니다.');
+        },
+    });
 
-            // 회원가입 성공 후 로그인 페이지로 이동
-            navigate('/login'); // 로그인 페이지로 이동
-        } catch (error) {
-            console.error('회원가입 오류:', error);
-            alert("회원가입에 실패했습니다. 다시 시도해주세요.");
-        }
+    const onSubmit = (data) => {
+        signupMutation.mutate(data);
     };
 
     return (
         <Container>
-            <Title>회원가입 페이지</Title>
+            <Title>회원가입</Title>
             <Form onSubmit={handleSubmit(onSubmit)}>
                 <Label>이메일</Label>
                 <Input
                     type="email"
-                    {...register("email")}
-                    placeholder="이메일을 입력해주세요!"
+                    {...register('email')}
+                    placeholder="이메일 (example@gmail.com)"
                     isError={!!errors.email}
                 />
                 {errors.email && <Error>{errors.email.message}</Error>}
@@ -56,8 +56,8 @@ const SignupPage = () => {
                 <Label>비밀번호</Label>
                 <Input
                     type="password"
-                    {...register("password")}
-                    placeholder="비밀번호를 입력해주세요!"
+                    {...register('password')}
+                    placeholder="비밀번호 (8자 이상 16자 미만)"
                     isError={!!errors.password}
                 />
                 {errors.password && <Error>{errors.password.message}</Error>}
@@ -65,7 +65,7 @@ const SignupPage = () => {
                 <Label>비밀번호 확인</Label>
                 <Input
                     type="password"
-                    {...register("passwordCheck")}
+                    {...register('passwordCheck')}
                     placeholder="비밀번호를 다시 입력해주세요!"
                     isError={!!errors.passwordCheck}
                 />

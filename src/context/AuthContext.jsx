@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const handleLogin = (userData) => {
+    console.log('로그인 성공, 전달된 userData:', userData);
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
   };

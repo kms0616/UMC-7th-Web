@@ -3,12 +3,13 @@ import styled from 'styled-components';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext'; // AuthContext 가져오기
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
 
 const schema = yup.object().shape({
-    email: yup.string().email('올바른 이메일 형식이 아닙니다. 다시 확인해주세요!').required('이메일을 입력해주세요.'),
+    email: yup.string().email('올바른 이메일 형식이 아닙니다.').required('이메일을 입력해주세요.'),
     password: yup.string()
         .min(8, '비밀번호는 8자 이상이어야 합니다.')
         .max(16, '비밀번호는 16자 이하여야 합니다.')
@@ -16,29 +17,31 @@ const schema = yup.object().shape({
 });
 
 const LoginPage = () => {
-    const { handleLogin } = useContext(AuthContext); // AuthContext에서 handleLogin 가져오기
+    const { handleLogin } = useContext(AuthContext);
+    const navigate = useNavigate();
     const { register, handleSubmit, formState: { errors, isValid } } = useForm({
         resolver: yupResolver(schema),
-        mode: "onChange",
+        mode: 'onChange',
     });
-    const navigate = useNavigate();
 
-    const onSubmit = async (data) => {
-        try {
-            const response = await axios.post('http://localhost:3000/auth/login', data);
+    const loginMutation = useMutation({
+        mutationFn: (data) => axios.post('http://localhost:3000/auth/login', data),
+        onSuccess: (response) => {
             const { accessToken, refreshToken } = response.data;
-
-            // 사용자 정보와 토큰을 localStorage에 저장
             localStorage.setItem('accessToken', accessToken);
             localStorage.setItem('refreshToken', refreshToken);
-            const userData = { email: data.email };
+            const userData = { email: response.data.email };
+            handleLogin(userData);
+            navigate('/');
+        },
+        onError: (error) => {
+            console.error('로그인 실패:', error);
+            alert('로그인에 실패했습니다. 다시 시도해주세요.');
+        },
+    });
 
-            handleLogin(userData); // 로그인 후 AuthContext에 로그인 상태 저장
-            navigate('/'); // 로그인 후 홈 페이지로 이동
-        } catch (error) {
-            console.error("로그인 실패:", error);
-            alert("로그인에 실패했습니다. 다시 시도해주세요.");
-        }
+    const onSubmit = (data) => {
+        loginMutation.mutate(data);
     };
 
     return (
@@ -48,8 +51,8 @@ const LoginPage = () => {
                 <Label>이메일</Label>
                 <Input
                     type="email"
-                    {...register("email")}
-                    placeholder="이메일을 입력해주세요!"
+                    {...register('email')}
+                    placeholder="이메일 (example@gmail.com)"
                     isError={!!errors.email}
                 />
                 {errors.email && <Error>{errors.email.message}</Error>}
@@ -57,8 +60,8 @@ const LoginPage = () => {
                 <Label>비밀번호</Label>
                 <Input
                     type="password"
-                    {...register("password")}
-                    placeholder="비밀번호를 입력해주세요!"
+                    {...register('password')}
+                    placeholder="비밀번호"
                     isError={!!errors.password}
                 />
                 {errors.password && <Error>{errors.password.message}</Error>}

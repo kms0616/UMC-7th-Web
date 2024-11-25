@@ -3,7 +3,7 @@ import { debounce } from 'lodash';
 import * as S from "../style/search_style";
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useCustomFetch from '../hooks/useCustomFetch';
-import MovieCard from '../components/MovieCard';  // MovieCard 임포트
+import MovieCard from '../components/MovieCard'; // MovieCard 임포트
 
 const Skeleton = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '20px', marginTop: '20px' }}>
@@ -21,11 +21,11 @@ const Skeleton = () => (
     </div>
 );
 
-
 const SearchPage = () => {
     const [searchValue, setSearchValue] = useState('');
-    const [searching, setSearching] = useState(false);  // 검색 상태를 추적하는 상태 추가
+    const [searching, setSearching] = useState(false); // 검색 상태를 추적하는 상태 추가
     const navigate = useNavigate();
+
     const onChangeSearchValue = (event) => {
         setSearchValue(event.target.value);
     };
@@ -54,12 +54,10 @@ const SearchPage = () => {
     const url = `/search/movie?query=${searchValue}&include_adult=false&language=ko-KR&page=1`;
     const { data: movies, isLoading, isError } = useCustomFetch(url);
 
-
-    // 로딩, 오류, 검색 결과가 없을 때 처리
     const renderContent = () => {
-        if (isLoading && searching) return <Skeleton/>;
+        if (isLoading && searching) return <Skeleton />;
         if (isError && searching) return <div>영화를 불러오는 데 오류가 발생했습니다.</div>;
-        if (!searching) return null;  // 검색이 진행 중이지 않으면 아무것도 렌더링하지 않음
+        if (!searching) return null; // 검색이 진행 중이지 않으면 아무것도 렌더링하지 않음
         if (!Array.isArray(movies) || movies.length === 0) {
             return (
                 <div style={{
@@ -72,30 +70,43 @@ const SearchPage = () => {
                 </div>
             );
         }
-
+    
         return (
-            <S.MovieGridContainer>
+            <S.MovieListContainer>
                 {movies.map(movie => (
-                    <MovieCard
+                    <S.MovieListItem
                         key={movie.id}
-                        id={movie.id}
-                        title={movie.title}
-                        poster_path={movie.poster_path}
-                        release_date={movie.release_date}
-                        onClick={() => navigate(`/movies/${movie.id}`)}  // 상세 페이지로 이동
-                    />
+                        onClick={() => navigate(`/movies/${movie.id}`)} // 부모 컨테이너에 클릭 이벤트 추가
+                    >
+                        {/* 포스터 */}
+                        <S.MoviePoster>
+                            <MovieCard
+                                id={movie.id}
+                                title={movie.title}
+                                poster_path={movie.poster_path}
+                                release_date={movie.release_date}
+                            />
+                        </S.MoviePoster>
+                        
+                        {/* 제목과 개봉일 */}
+                        <S.MovieDetails>
+                            <h3>{movie.title}</h3>
+                            <p>{movie.release_date}</p>
+                        </S.MovieDetails>
+                    </S.MovieListItem>
                 ))}
-            </S.MovieGridContainer>
+            </S.MovieListContainer>
         );
     };
+    
 
     return (
         <>
             <S.SearchContainer>
-                <input 
-                    placeholder='영화 제목을 입력해주세요 ...' 
-                    value={searchValue} 
-                    onChange={onChangeSearchValue} 
+                <input
+                    placeholder='영화 제목을 입력해주세요 ...'
+                    value={searchValue}
+                    onChange={onChangeSearchValue}
                     onKeyDown={handleSearchMovieWithKeyboard}
                 />
                 <button onClick={handleSearchMovie}>

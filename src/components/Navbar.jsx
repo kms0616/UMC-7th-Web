@@ -21,16 +21,10 @@ const NavbarContainer = styled.nav`
   color: white;
 `;
 
+// Navbar.js
 const Navbar = () => {
-  const { user, fetchUser, handleLogout } = useContext(AuthContext);
+  const { user, handleLogout } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken');
-    if (accessToken && !user) {
-      fetchUser(); // 사용자 정보가 없고 로그인 상태일 때만 fetchUser 호출
-    }
-  }, [user, fetchUser]);
 
   return (
     <NavbarContainer>
@@ -39,7 +33,7 @@ const Navbar = () => {
         {user ? (
           <>
             <span style={{ color: 'white', marginRight: '20px' }}>
-              {user.email.split('@')[0]}님 반갑습니다.
+              {user.email ? user.email.split('@')[0] : '사용자'}님 반갑습니다.
             </span>
             <Button color="#ff0558" onClick={handleLogout}>
               로그아웃
@@ -59,5 +53,6 @@ const Navbar = () => {
     </NavbarContainer>
   );
 };
+
 
 export default Navbar;
