@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Button from './Button';
@@ -7,9 +7,9 @@ import { AuthContext } from '../context/AuthContext';
 const Logo = styled.div`
   font-size: 30px;
   font-weight: bold;
-  color: #ff0558; // 원하는 색상
+  color: #ff0558;
   cursor: pointer;
-  margin-right: auto; // 로고를 왼쪽 정렬
+  margin-right: 30px; /* 로고와 메뉴 간 간격 */
 `;
 
 const NavbarContainer = styled.nav`
@@ -17,19 +17,61 @@ const NavbarContainer = styled.nav`
   justify-content: space-between;
   align-items: center;
   padding: 20px 30px;
-  background-color: #1C1C1C; // 네비게이션 바 배경 색상
+  background-color: #1c1c1c;
   color: white;
 `;
 
-// Navbar.js
+const MenuContainer = styled.div`
+  display: flex;
+  gap: 20px;
+  align-items: center;
+`;
+
+const MenuItem = styled.span`
+  font-size: 16px;
+  cursor: ${(props) => (props.isDisabled ? 'not-allowed' : 'pointer')};
+  padding-bottom: 2px;
+
+  &:hover {
+    color: ${(props) => (props.isDisabled ? '#555' : 'white')};
+    text-decoration: ${(props) => (props.isDisabled ? 'none' : 'underline')};
+  }
+`;
+
+const AuthButtons = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
 const Navbar = () => {
   const { user, handleLogout } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const [activeMenu, setActiveMenu] = useState('');
+
+  const handleMenuClick = (menuName, path) => {
+    setActiveMenu(menuName);
+    navigate(path);
+  };
+
   return (
     <NavbarContainer>
-      <Logo onClick={() => navigate('/')}>MINCHA</Logo>
-      <div>
+      {/* 로고와 메뉴 */}
+      <MenuContainer>
+        <Logo onClick={() => navigate('/')}>MINCHA</Logo>
+        <MenuItem isDisabled>구독</MenuItem>
+        <MenuItem isDisabled>개별구매</MenuItem>
+        <MenuItem isDisabled>웹툰</MenuItem>
+        <MenuItem
+          isActive={activeMenu === '민챠파티'}
+          onClick={() => handleMenuClick('민챠파티', '/party')}
+        >
+          민챠파티
+        </MenuItem>
+      </MenuContainer>
+
+      {/* 로그인/회원가입 버튼 */}
+      <AuthButtons>
         {user ? (
           <>
             <span style={{ color: 'white', marginRight: '20px' }}>
@@ -49,10 +91,9 @@ const Navbar = () => {
             </Button>
           </>
         )}
-      </div>
+      </AuthButtons>
     </NavbarContainer>
   );
 };
-
 
 export default Navbar;
