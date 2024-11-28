@@ -1,0 +1,46 @@
+/* InputTodo 중앙 정렬 */
+.InputTodo {
+    display: flex;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center;     /* 세로 중앙 정렬 */
+    width: 100%;             /* 부모의 가로폭을 100%로 설정 */
+    min-width: 500px;        /* 최대 너비 설정 */
+    margin-bottom: 20px;     /* TodoList와의 간격을 위해 아래쪽 여백 추가 */
+  }
+  
+  /* 입력 폼 스타일 */
+  form {
+    display: flex;
+    flex-direction: row;     /* 가로로 배치 */
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center;     /* 세로 중앙 정렬 */
+    width: 100%;             /* 부모 요소에 맞게 전체 넓이 사용 */
+    gap: 10px;               /* 입력창과 버튼 간의 간격 */
+  }
+  
+  /* 입력창 스타일 */
+  .textbar {
+    padding: 10px;
+    font-size: 16px;
+    width: 300px;            /* 원하는 너비로 설정 */
+    margin-bottom: 0;        /* 아래로 간격을 주지 않음 */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* 제출 버튼 스타일 */
+  .submitbutton {
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;       /* 버튼과 입력창 사이의 간격 */
+  }
+  
+  .submitbutton:hover {
+    background-color: #45a049;
+  }
+  

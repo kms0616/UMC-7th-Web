@@ -1,0 +1,28 @@
+/* App.css */
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 수직 중앙 정렬 */
+  align-items: center;     /* 수평 중앙 정렬 */
+  height: 100vh;           /* 화면 높이 전체 */
+  width: 100vw;            /* 화면 너비 전체 */
+  margin: 0;               /* 기본 margin 제거 */
+  text-align: center;      /* 텍스트 중앙 정렬 */
+}
+
+h1 {
+  margin-bottom: 20px;      /* 아래쪽 간격 조정 */
+}
+
+/* InputTodo와 TodoList 중앙 정렬 */
+.InputTodo,
+.TodoList {
+  display: flex;
+  justify-content: center; /* 가로 중앙 정렬 */
+  align-items: center;     /* 세로 중앙 정렬 */
+}
