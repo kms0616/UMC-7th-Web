@@ -1,14 +1,10 @@
 import styled from "styled-components";
-import { useDispatch, useSelector } from "react-redux";
 import CartItem from "./CartItem";
-import { clearCart } from "../features/cart/cartSlice";
-import { openModal } from "../features/modal/modalSlice";
+import useStore from "../store/store"; // Zustand 사용
 
 const CartContainer = () => {
-    //const state = useSelector((store) => store.cart);
-    //console.log(state);
-    const { cartItems, total, amount }= useSelector((store) => store.cart);
-    const dispatch = useDispatch();
+    const { cartItems, total, amount, openModal } = useStore();
+    
     return (
         <Cart>
             <header>
@@ -16,7 +12,7 @@ const CartContainer = () => {
             </header>
             <div>
                 {cartItems.map((item) => {
-                    return <CartItem key = {item.id} {...item} />
+                    return <CartItem key={item.id} {...item} />;
                 })}
             </div>
             <footer>
@@ -25,9 +21,7 @@ const CartContainer = () => {
                     <h4>총 가격</h4>
                     <span>\ {total}원</span>
                 </div>
-                <button className="btn clear-btn" onClick={() => {
-                    dispatch(openModal());
-                }} >
+                <button className="btn clear-btn" onClick={openModal}>
                     장바구니 초기화
                 </button>
             </footer>
@@ -36,6 +30,7 @@ const CartContainer = () => {
 };
 
 export default CartContainer;
+
 
 const Cart = styled.section`
     max-width: 800px;

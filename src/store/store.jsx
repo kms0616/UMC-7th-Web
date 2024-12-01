@@ -1,10 +1,44 @@
-import { configureStore } from "@reduxjs/toolkit";
-import cartReducer from "../features/cart/cartSlice";
-import modalReducer from "../features/modal/modalSlice"; // 경로 확인
+import { create } from 'zustand';
+import cartItems from '../constants/cartItems'; // constants에서 cartItems 가져오기
 
-export const store = configureStore({
-  reducer: {
-    cart: cartReducer,
-    modal: modalReducer, // modalReducer가 reducer로 추가되어야 함
-  },
-});
+const useStore = create((set) => ({
+  cartItems: cartItems, // constants의 cartItems로 초기화
+  amount: 0,
+  total: 0,
+  isOpen: false,
+
+  // 액션들
+  increase: (id) => set((state) => {
+    const updatedItems = state.cartItems.map(item => 
+      item.id === id ? { ...item, amount: item.amount + 1 } : item
+    );
+    return { cartItems: updatedItems };
+  }),
+
+  decrease: (id) => set((state) => {
+    const updatedItems = state.cartItems.map(item => 
+      item.id === id ? { ...item, amount: item.amount - 1 } : item
+    );
+    return { cartItems: updatedItems };
+  }),
+
+  removeItem: (id) => set((state) => {
+    const updatedItems = state.cartItems.filter(item => item.id !== id);
+    return { cartItems: updatedItems };
+  }),
+
+  clearCart: () => set({ cartItems: [], amount: 0, total: 0 }),
+
+  openModal: () => set({ isOpen: true }),
+
+  closeModal: () => set({ isOpen: false }),
+
+  // 총합 계산 함수
+  calculateTotals: () => set((state) => {
+    const updatedAmount = state.cartItems.reduce((acc, item) => acc + item.amount, 0);
+    const updatedTotal = state.cartItems.reduce((acc, item) => acc + item.amount * item.price, 0);
+    return { amount: updatedAmount, total: updatedTotal };
+  }),
+}));
+
+export default useStore;

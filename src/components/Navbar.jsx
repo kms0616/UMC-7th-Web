@@ -1,8 +1,9 @@
 import styled from "styled-components";
-import { useSelector } from "react-redux";
+import useStore from "../store/store"; // Zustand 사용
 
 const Navbar = () => {
-    const { amount } = useSelector((state) => state.cart);
+    const { amount } = useStore();
+    
     return (
         <Nav>
             <div className="nav-center">
@@ -19,6 +20,7 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
 
 const Nav = styled.nav`
   background: #9cc5e2; 

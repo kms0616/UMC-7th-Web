@@ -1,22 +1,18 @@
-import { useDispatch } from "react-redux";
-import { clearCart } from "../features/cart/cartSlice";
-import { closeModal } from "../features/modal/modalSlice";
 import styled from "styled-components";
+import useStore from "../store/store"; // Zustand 사용
 
 const ModalButton = () => {
-    const dispatch = useDispatch();
+    const { clearCart, closeModal } = useStore();
 
     return (
         <ButtonContainer>
             <ConfirmButton onClick={() => {
-                dispatch(clearCart());
-                dispatch(closeModal());
+                clearCart();
+                closeModal();
             }}>
                 네
             </ConfirmButton>
-            <CancelButton onClick={() => {
-                dispatch(closeModal());
-            }}>
+            <CancelButton onClick={() => closeModal()}>
                 아니요
             </CancelButton>
         </ButtonContainer>
@@ -24,6 +20,7 @@ const ModalButton = () => {
 };
 
 export default ModalButton;
+
 
 const ButtonContainer = styled.div`
   display: flex;

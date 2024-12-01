@@ -1,40 +1,40 @@
 import styled from "styled-components";
-import { useDispatch } from "react-redux";
 import { ChevronDown, ChevronUp } from "../constants/icons";
-import { decrease, increase, removeItem } from "../features/cart/cartSlice";
+import useStore from "../store/store"; // Zustand 사용
 
 const CartItem = ({ id, title, singer, price, img, amount }) => {
-    const dispatch = useDispatch();
+    const { increase, decrease, removeItem } = useStore();
+
     return (
         <Wrapper>
-            <img src = {img} alt={`${title} 이미지`} />
+            <img src={img} alt={`${title} 이미지`} />
             <div className="info">
                 <h4 className="title">
                     {title} | {singer}
                 </h4>
-
                 <h4 className="item-price">\ {price}</h4>
             </div>
             <div className="actions">
-                <button className="amount-btn" onClick={() => dispatch(increase(id))}>
+                <button className="amount-btn" onClick={() => increase(id)}>
                     <ChevronUp />
                 </button>
                 <p className="amount">{amount}</p>
                 <button className="amount-btn" onClick={() => {
                     if (amount === 1) {
-                        dispatch(removeItem(id));
+                        removeItem(id);
                         return;
                     }
-                    dispatch(decrease(id));
+                    decrease(id);
                 }}>
                     <ChevronDown />
                 </button>
             </div>
         </Wrapper>
-    )
-}
+    );
+};
 
 export default CartItem;
+
 
 const Wrapper = styled.article`
     display: flex;
