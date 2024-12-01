@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import CartItem from "./CartItem";
 import { clearCart } from "../features/cart/cartSlice";
+import { openModal } from "../features/modal/modalSlice";
 
 const CartContainer = () => {
     //const state = useSelector((store) => store.cart);
@@ -25,7 +26,7 @@ const CartContainer = () => {
                     <span>\ {total}원</span>
                 </div>
                 <button className="btn clear-btn" onClick={() => {
-                    dispatch(clearCart());
+                    dispatch(openModal());
                 }} >
                     장바구니 초기화
                 </button>
