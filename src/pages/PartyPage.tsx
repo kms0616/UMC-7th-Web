@@ -101,8 +101,14 @@ const MovieOverview = styled.p`
   color: #999;
 `;
 
-const PartyPage = () => {
-  const [movie, setMovie] = useState(null);
+interface Movie {
+  title: string;
+  poster_path: string;
+  overview: string;
+}
+
+const PartyPage: React.FC = () => {
+  const [movie, setMovie] = useState<Movie | null>(null);
 
   useEffect(() => {
     const getMovie = async () => {
@@ -123,7 +129,6 @@ const PartyPage = () => {
 
   return (
     <PageContainer>
-      {/* 윗부분 분홍색 배경 */}
       <TopSection>
         <div>
           <h6 style={{ color: 'white' }}>민챠파티</h6>
@@ -131,13 +136,11 @@ const PartyPage = () => {
         </div>
       </TopSection>
 
-      {/* 버튼 섹션: 불투명한 검은색 배경에 버튼들 */}
       <ButtonsContainer>
         <PlayButton>재생하기</PlayButton>
         <ShareButton>공유하기</ShareButton>
       </ButtonsContainer>
 
-      {/* 아래 부분 영화 정보 */}
       <BottomSection>
         <MovieInfo>
           <MoviePoster

@@ -2,8 +2,15 @@ import React from 'react';
 import MovieCard from '../components/MovieCard';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import usePaginatedMovies from '../hooks/usePaginatedMovies'; // usePaginatedMovies로 변경
+import usePaginatedMovies from '../hooks/usePaginatedMovies'; 
 import Spinner from '../components/Spinner';
+
+interface IMovie {
+    id: number;
+    title: string;
+    poster_path: string;
+    release_date: string;
+}
 
 const Skeleton = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '20px', marginTop: '20px' }}>
@@ -21,7 +28,7 @@ const Skeleton = () => (
     </div>
 );
 
-const NowPlayingPage = () => {
+const TopRatedPage = () => {
     const navigate = useNavigate();
     const {
         data,
@@ -30,7 +37,7 @@ const NowPlayingPage = () => {
         page,
         goToNextPage,
         goToPrevPage,
-    } = usePaginatedMovies('/movie/now_playing'); // API 엔드포인트 수정
+    } = usePaginatedMovies('/movie/top_rated'); 
 
     if (isLoading) {
         return (
@@ -47,16 +54,17 @@ const NowPlayingPage = () => {
         return <div><h1 style={{ color: 'white' }}>에러 중 입니다 ...</h1></div>;
     }
 
-    const handleCardClick = (id) => {
+    const handleCardClick = (id: number) => {
         navigate(`/movies/${id}`);
     };
 
     return (
         <HomeContainer>
             {data && data.results ? (
-                data.results.map((movie) => (
+                data.results.map((movie: IMovie) => (
                     <MovieCard
                         key={movie.id}
+                        id={movie.id}
                         title={movie.title}
                         poster_path={movie.poster_path}
                         release_date={movie.release_date}
@@ -64,7 +72,7 @@ const NowPlayingPage = () => {
                     />
                 ))
             ) : (
-                <div>Loading...</div> // 데이터가 없을 때 표시할 로딩 화면
+                <div>Loading...</div>
             )}
 
             <PaginationContainer>
@@ -80,7 +88,7 @@ const NowPlayingPage = () => {
     );
 };
 
-export default NowPlayingPage;
+export default TopRatedPage;
 
 const HomeContainer = styled.div`
     display: flex;
@@ -98,7 +106,7 @@ const PaginationContainer = styled.div`
     justify-content: center;
     align-items: center;
     margin: 20px 0;
-    position: absolute; /* 화면 하단에 고정 */
+    position: absolute;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);

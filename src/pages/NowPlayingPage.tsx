@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import usePaginatedMovies from '../hooks/usePaginatedMovies'; // usePaginatedMovies로 변경
 import Spinner from '../components/Spinner';
 
-const Skeleton = () => (
+// Skeleton 컴포넌트에서 사용되는 스타일에 대한 타입 선언
+const Skeleton: React.FC = () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '20px', marginTop: '20px' }}>
         {[...Array(20)].map((_, idx) => (
             <div
@@ -21,8 +22,22 @@ const Skeleton = () => (
     </div>
 );
 
-const UpcomingPage = () => {
+interface Movie {
+    id: number;
+    title: string;
+    poster_path: string;
+    release_date: string;
+}
+
+interface PaginatedData {
+    results: Movie[];
+    total_pages: number;
+}
+
+const NowPlayingPage: React.FC = () => {
     const navigate = useNavigate();
+
+    // usePaginatedMovies 훅에서 반환된 데이터의 타입을 명시
     const {
         data,
         isLoading,
@@ -30,7 +45,7 @@ const UpcomingPage = () => {
         page,
         goToNextPage,
         goToPrevPage,
-    } = usePaginatedMovies('/movie/upcoming'); // API 엔드포인트 수정
+    } = usePaginatedMovies('/movie/now_playing'); // API 엔드포인트 수정
 
     if (isLoading) {
         return (
@@ -47,7 +62,7 @@ const UpcomingPage = () => {
         return <div><h1 style={{ color: 'white' }}>에러 중 입니다 ...</h1></div>;
     }
 
-    const handleCardClick = (id) => {
+    const handleCardClick = (id: number): void => {
         navigate(`/movies/${id}`);
     };
 
@@ -57,6 +72,7 @@ const UpcomingPage = () => {
                 data.results.map((movie) => (
                     <MovieCard
                         key={movie.id}
+                        id={movie.id}
                         title={movie.title}
                         poster_path={movie.poster_path}
                         release_date={movie.release_date}
@@ -80,7 +96,7 @@ const UpcomingPage = () => {
     );
 };
 
-export default UpcomingPage;
+export default NowPlayingPage;
 
 const HomeContainer = styled.div`
     display: flex;
@@ -105,7 +121,7 @@ const PaginationContainer = styled.div`
     width: 100%;
 `;
 
-const PaginationButton = styled.button`
+const PaginationButton = styled.button<{ disabled: boolean }>`
     background-color: ${({ disabled }) => (disabled ? '#ccc' : '#ff0558')};
     color: white;
     border: none;

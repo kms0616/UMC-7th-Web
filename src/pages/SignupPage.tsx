@@ -1,11 +1,17 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler, FieldValues } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
+
+interface IFormInputs {
+    email: string;
+    password: string;
+    passwordCheck: string;
+}
 
 const schema = yup.object().shape({
     email: yup.string().email('올바른 이메일 형식이 아닙니다.').required('이메일을 입력해주세요.'),
@@ -14,19 +20,20 @@ const schema = yup.object().shape({
         .max(16, '비밀번호는 16자 이하여야 합니다.')
         .required('비밀번호를 입력해주세요.'),
     passwordCheck: yup.string()
-        .oneOf([yup.ref('password'), null], '비밀번호가 일치하지 않습니다.')
-        .required('비밀번호 확인은 필수 입력입니다.'),
+    .oneOf([yup.ref('password'), ''], '비밀번호가 일치하지 않습니다.')  // 빈 문자열로 수정
+    .required('비밀번호 확인은 필수 입력입니다.'),    
+
 });
 
 const SignupPage = () => {
     const navigate = useNavigate();
-    const { register, handleSubmit, formState: { errors, isValid } } = useForm({
+    const { register, handleSubmit, formState: { errors, isValid } } = useForm<IFormInputs>({
         resolver: yupResolver(schema),
         mode: 'onChange',
     });
 
     const signupMutation = useMutation({
-        mutationFn: (data) => axios.post('http://localhost:3000/auth/register', data),
+        mutationFn: (data: IFormInputs) => axios.post('http://localhost:3000/auth/register', data),
         onSuccess: () => {
             navigate('/login');
         },
@@ -36,7 +43,7 @@ const SignupPage = () => {
         },
     });
 
-    const onSubmit = (data) => {
+    const onSubmit: SubmitHandler<IFormInputs> = (data) => {
         signupMutation.mutate(data);
     };
 
@@ -103,7 +110,7 @@ const Label = styled.label`
   font-size: 14px;
 `;
 
-const Input = styled.input`
+const Input = styled.input<{ isError: boolean }>`
   padding: 10px;
   margin-bottom: 10px;
   font-size: 16px;
@@ -133,7 +140,7 @@ const SignupButton = styled.button`
   cursor: pointer;
 
   &:disabled {
-    background-color: #ccc; // 비활성화 시 색상
+    background-color: #ccc;
     cursor: not-allowed;
   }
 `;
